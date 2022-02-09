@@ -8,7 +8,7 @@ export default class ListCategorys {
         const category = await categoryRepository.find();
 
         //Caso não retorne nenhuma categoria
-        if (category.length == 0) {
+        if (category.length === 0) {
             throw new AppError("Não há nenhuma categoria cadastrada");
         }
 

@@ -11,16 +11,20 @@ export default class OrderRepository implements
     }
 
     async create(data: IOrderDTO): Promise<Order> {
-        const order = await this.ormRepository.create(data);
+        const order = this.ormRepository.create(data);
         return this.ormRepository.save(order);
     }
 
     async findClientOne(id: number): Promise<Order[]> {
-        return this.ormRepository.find({cliente_id: id});
+        return await this.ormRepository.find({cliente_id: id});
     }
 
     async listOrders(): Promise<Order[]> {
-        return this.ormRepository.find();
+        return await this.ormRepository
+        .createQueryBuilder('o')
+        .leftJoinAndSelect('o.pedido_produtos', 'pp')
+        .leftJoinAndSelect('pp.produto', 'p')
+        .getMany();
     }
 
     async findOne(id: number): Promise<Order | undefined> {
@@ -28,10 +32,8 @@ export default class OrderRepository implements
     }
 
     async update(data: IOrderDTO, id: number): Promise<Order> {
-        await this.ormRepository.delete(id);
-        data.id = id;
-        const order = await this.ormRepository.create(data);
-        return this.ormRepository.save(order);
+        const newData = {...data, id};
+        return await this.ormRepository.save(newData);
     }
 
     async delete(id: number): Promise<Order[]> {

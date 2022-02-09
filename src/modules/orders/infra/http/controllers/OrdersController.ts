@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 
 import CreateOrderService from "../../../services/orders services/CreateOrderService";
-import FindClientOrder from "../../../services/orders services/FindClientOrder";
 import FindOrder from "../../../services/orders services/FindOrder";
 import UpdateOrder from "../../../services/orders services/UpdateOrder";
 import DeleteOrder from "../../../services/orders services/DeleteOrder";
@@ -12,14 +11,6 @@ class OrdersController {
         const data = request.body;
         const createOrderService = new CreateOrderService();
         const order = await createOrderService.execute(data);
-        return response.json(order);
-    }
-
-    async findClient(request: Request, response: Response) {
-        const {id} = request.params;
-        const id_n = Number(id);
-        const findClientOrder = new FindClientOrder;
-        const order = await findClientOrder.execute(id_n);
         return response.json(order);
     }
 

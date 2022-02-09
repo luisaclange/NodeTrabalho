@@ -4,17 +4,17 @@ import Order from "../../infra/typeorm/entities/Order";
 import OrderProduct from "../../infra/typeorm/entities/OrderProduct";
 import OrderRepository from "../../infra/typeorm/repositories/OrderRepository";
 import AppError from "../../../../shared/errors/AppErrors";
-import OrderProductRepository from "../../infra/typeorm/repositories/OrderProductRepository";
 import ProductRepository from "../../../products/infra/typeorm/repositories/ProductRepository";
 import Product from "../../../products/infra/typeorm/entities/Product";
 import ClientRepository from "../../../clients/infra/typeorm/repositories/ClientRepository";
+import FindProduct from "../../../products/services/product services/FindProduct";
+import FindClient from "../../../clients/services/client services/FindClient";
 
 export default class CreateOrderService {
-    public async execute(data: IOrderDTO): Promise<any> {
+    public async execute(data: IOrderDTO): Promise<Order> {
         const orderRepository = new OrderRepository();
-        const orderProductRepository = new OrderProductRepository();
-        const productRepository = new ProductRepository();
-        const clientRepository = new ClientRepository();
+        const serviceFindProduct = new FindProduct();
+        const serviceFindClient = new FindClient();
 
         //ID não pode ser enviado no cadastro
         if (data.id) {
@@ -27,54 +27,26 @@ export default class CreateOrderService {
         }
 
         //Deve ter pelo menos um produto a ser comprado
-        if (data.pedido_produto.length == 0) {
+        if (data.pedido_produtos.length === 0) {
             throw new AppError("O pedido deve possuir pelo menos um produto a ser comprado");
         }
 
         //Verificar se o cliente id existe
-        if (await clientRepository.findOne(data.cliente_id) === undefined) {
-            throw new AppError("O cliente informado não existe");
+        serviceFindClient.execute(data.cliente_id);
+
+        //Verificação se os ids dos produtos informados são validos e soma do valor
+        var valor: number = 0;
+        for (var i = 0; i < data.pedido_produtos.length; i++) {
+            const produto = await serviceFindProduct.execute(data.pedido_produtos[i].produto_id);
+            valor += produto?.preco * data.pedido_produtos[i].quantidade;
         }
 
-        //Verificação que os ids dos produtos informados são validos e soma do valor
-        var valor: number;
-        valor = 0;
-        for (var i=0; i<data.pedido_produto.length; i++) {
-            if (await productRepository.findOne(data.pedido_produto[i].produto_id) === undefined) {
-                throw new AppError("Produto de id "+data.pedido_produto[i].produto_id+" não foi encontrado");
-            } else {
-                const produto = await productRepository.findOne(data.pedido_produto[i].produto_id);
-                //@ts-ignore              
-                valor += produto?.preco * data.pedido_produto[i].quantidade;
-            }
-        }
-
-        //Criar novo pedido
+        // //Criar novo pedido
         data.valor = valor;
         data.status = "Em aberto";
-        const order = await orderRepository.create(data);
+        const order = orderRepository.create(data);
 
-        //Criar array
-        var list: Array<OrderProduct> = ([]);
 
-        //Adicionar cada produto
-        for (var i=0; i<data.pedido_produto.length; i++) {
-            const orderProduct = await orderProductRepository.create({
-                "pedido_id": order.id,
-                "produto_id": data.pedido_produto[i].produto_id,
-                "quantidade": data.pedido_produto[i].quantidade
-            });
-            list.push(orderProduct);
-        };
-
-        var listOrder: {
-            pedido: Order,
-            produtos: OrderProduct[]
-        } = ({
-            pedido: order,
-            produtos: list
-        });
-
-        return listOrder;
+        return order;
     }
 }

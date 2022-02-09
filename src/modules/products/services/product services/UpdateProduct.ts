@@ -3,16 +3,18 @@ import ProductRepository from "../../infra/typeorm/repositories/ProductRepositor
 import IProductDTO from "../../dtos/IProductDTO";
 import AppError from "../../../../shared/errors/AppErrors";
 import CategoryRepository from "../../../categories/infra/typeorm/repositories/CategoryRepository";
+import FindProduct from "./FindProduct";
+import FindCategory from "../../../categories/services/category services/FindCategory";
 
 export default class UpdateProduct {
     public async execute(data: IProductDTO, id: number): Promise<Product|undefined> {
         const productRepository = new ProductRepository();
         const categoryRepository = new CategoryRepository();
+        const serviceFindProduct = new FindProduct();
+        const serviceFindCategory = new FindCategory();
 
         //O id informado nao é valido
-        if (await productRepository.findOne(id) === undefined) {
-            throw new AppError("O ID informado não é válido");
-        }
+        serviceFindProduct.execute(id);
 
         //ID não pode ser enviado no json
         if (data.id) {
@@ -20,9 +22,7 @@ export default class UpdateProduct {
         }
 
         //O id da categoria deve ser válido
-        if (await categoryRepository.findOne(data.categoria_id) === undefined) {
-            throw new AppError("Não foi encontrado o ID da categoria");
-        }
+        serviceFindCategory.execute(data.categoria_id);
 
         //Atualiza o produto
         const product = await productRepository.update(data, id);

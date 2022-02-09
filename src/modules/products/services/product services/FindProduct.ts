@@ -3,7 +3,7 @@ import ProductRepository from "../../infra/typeorm/repositories/ProductRepositor
 import AppError from "../../../../shared/errors/AppErrors";
 
 export default class FindProduct {
-    public async execute(id: number): Promise<Product|undefined> {
+    public async execute(id: number): Promise<Product> {
         const productRepository = new ProductRepository();
         const product = await productRepository.findOne(id);
         

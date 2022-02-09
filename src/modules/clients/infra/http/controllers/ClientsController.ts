@@ -5,6 +5,7 @@ import ListClients from "../../../services/client services/ListClients";
 import FindClient from "../../../services/client services/FindClient";
 import UpdateClient from "../../../services/client services/UpdateClient";
 import DeleteClient from "../../../services/client services/DeleteClient";
+import ListOrdersClient from "../../../services/client services/ListOrdersClient";
 
 class ClientsController {
 
@@ -49,6 +50,15 @@ class ClientsController {
         const deleteClient = new DeleteClient;
         const client = await deleteClient.execute(id_n);
         return response.json(client);
+    }
+
+    //Buscar pedidos de cliente
+    async findOrders(request: Request, response: Response) {
+        const {id} = request.params;
+        const id_n = Number(id);
+        const listOrdersClient = new ListOrdersClient;
+        const order = await listOrdersClient.execute(id_n);
+        return response.json(order);
     }
     
 }
